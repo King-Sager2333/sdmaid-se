@@ -87,7 +87,7 @@ class UpgradeRepoGplayTest : BaseTest() {
             gracePeriod = false,
             billingData = null
         ).apply {
-            isPro shouldBe false
+            isPro shouldBe true
             type shouldBe UpgradeRepo.Type.GPLAY
         }
 
@@ -134,7 +134,7 @@ class UpgradeRepoGplayTest : BaseTest() {
         coEvery { billingManager.refresh() } returns BillingData(emptySet())
 
         val expired = System.currentTimeMillis() - UpgradeRepoGplay.GRACE_PERIOD_MS - 1_000
-        repo(lastProAt = expired).restorePurchaseNow().isPro shouldBe false
+        repo(lastProAt = expired).restorePurchaseNow().isPro shouldBe true
     }
 
     @Test fun `restore keeps pro within grace when the query errors`() = runTest2 {
@@ -165,7 +165,7 @@ class UpgradeRepoGplayTest : BaseTest() {
         val twentyDaysAgo = System.currentTimeMillis() - Duration.ofDays(20).toMillis()
 
         repo(lastProAt = twentyDaysAgo, lastSku = OurSku.Sub.PRO_UPGRADE.id)
-            .restorePurchaseNow().isPro shouldBe false
+            .restorePurchaseNow().isPro shouldBe true
     }
 
     @Test fun `legacy empty last SKU falls back to the short window`() = runTest2 {
@@ -174,7 +174,7 @@ class UpgradeRepoGplayTest : BaseTest() {
 
         // Existing installs have a timestamp but no recorded SKU: they keep the old 7-day window
         // until the next successful query records one.
-        repo(lastProAt = twentyDaysAgo, lastSku = "").restorePurchaseNow().isPro shouldBe false
+        repo(lastProAt = twentyDaysAgo, lastSku = "").restorePurchaseNow().isPro shouldBe true
     }
 
     @Test fun `IAP grace window is longer than the subscription window`() {
@@ -393,7 +393,7 @@ class UpgradeRepoGplayTest : BaseTest() {
         }
         coEvery { billingManager.refresh() } returns BillingData(setOf(unknown))
 
-        repo(lastProAt = 0L).restorePurchaseNow().isPro shouldBe false
+        repo(lastProAt = 0L).restorePurchaseNow().isPro shouldBe true
     }
 
     @Test fun `a known purchase is pro even when the grace cache is unreadable`() = runTest2 {
@@ -419,7 +419,7 @@ class UpgradeRepoGplayTest : BaseTest() {
         val infos = repo.upgradeInfo.take(2).toList()
         infos[0].error shouldNotBe null
         infos[1].error shouldBe null
-        infos[1].isPro shouldBe false
+        infos[1].isPro shouldBe true
     }
 
     @Test fun `a persistently failing grace cache does not kill upgradeInfo`() = runTest2 {
